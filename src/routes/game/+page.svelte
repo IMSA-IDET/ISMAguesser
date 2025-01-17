@@ -4,6 +4,8 @@
     import Button from "../../shared/components/Button.svelte";
     import panzoom from 'panzoom'
 
+    const MAP_LENGTH = $state(256);
+
     let withTimeInput = $state(true);
 
     let mapPanzoom;
@@ -81,18 +83,23 @@
         padding: 16px;
         background-color: yellow;
         width: 400px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 64px;
     }
 
     .info_container {
         display: flex;
         justify-content: space-evenly;
+        width: 100%;
     }
 
     .info_stat {
         display: flex;
         flex-direction: column;
         align-items: center;
-        background-color: red;
         padding: 8px;
     }
 
@@ -115,14 +122,6 @@
 
     .map_container > div {
         position: relative;
-    }
-
-    #map {
-        position: absolute;
-        width: 300px;
-        height: 300px;
-        /* background: url("/images/map.png");
-        background-size: cover; */
     }
 
     #map_background {
@@ -162,7 +161,7 @@
         <div class="map_container">
             <div id="map_panzoom" use:initPanzoom bind:this={mapPanzoom}>
                 <div id="map_pin" bind:this={mapPin}></div>
-                <div id="map_background"></div>
+                <div id="map_background" style="width: {MAP_LENGTH}px; height: {MAP_LENGTH}px"></div>
             </div>
         </div>
         {#if withTimeInput}

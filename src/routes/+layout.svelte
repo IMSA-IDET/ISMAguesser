@@ -54,7 +54,7 @@
         <a href="/leaderboard">Leaderboard</a>
     </div>
     <div id="right">
-        <a id="profile_link" href="/profile">Profile</a>
+        <!-- <a id="profile_link" href="/profile">Profile</a> -->
     </div>
 </nav>
 <div id="nav_padding"></div>

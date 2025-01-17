@@ -5,5 +5,5 @@
 
 </style>
 <div>
-    <button>{props.text}</button>
+    <button onclick={props.action}>{props.text}</button>
 </div>
