@@ -1,16 +1,14 @@
 export default {
-    "standard": [
-        {
-            "image": "test.png",
+    "standard": {
+        "test.png": {
             "location": {
                 "x": 0,
                 "y": 0
             },
         }
-    ],
-    "time_travel": [
-        {
-            "image": "test.png",
+    },
+    "time_travel": {
+        "test.png": {
             "location": {
                 "x": 0,
                 "y": 0
@@ -21,7 +19,7 @@ export default {
                 "day": 0
             }
         }
-    ],
+    },
     "weekly": {
         "image": "test.png",
         "location": {
