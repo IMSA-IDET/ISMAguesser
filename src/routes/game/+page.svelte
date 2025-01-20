@@ -7,14 +7,18 @@
 
     const MAP_LENGTH = $state(256);
 
-    let withTimeInput = $state(true);
+    let withTimeInput = $state(false);
     let imageLink = $state("");
     let timeVisual = $state("00:00");
 
+    let gameData = undefined;
     let round = $state(1);
+    let maxRound = $state(1);
     let timeLeft = 59 * 61 // 59:59
     let score = $state(0);
-    let gameEnded = false;
+    let totalScore = $state(0);
+    let roundEnded = true;
+    let matchEnded = false;
 
     let mapPanzoom;
     let mapPin;
@@ -63,24 +67,29 @@
             }
             return response.json();
         }).then(json => {
-            const gameData = json.game_data;
-
-            setInterval(() => {
-                timeLeft = (gameData.end_time - new Date().getTime()) / 1000;
-                if (timeLeft <= 1) {
-                    endGame();
-                }
-
-                if (gameEnded) {
-                    timeVisual = "00:00";
-                }
-                const leadingZero = (num) => String(num).padStart(2, '0');
-                timeVisual = `${leadingZero(Math.floor(timeLeft / 60))}:${leadingZero(Math.floor(timeLeft) % 60)}`;
-            }, 1000);
-
-            updateImage();
+            gameData = json.game_data;
+            maxRound = gameData.total_rounds;
+            startRound();
         });
     });
+    
+    setInterval(() => {
+        if (gameData == undefined) {
+            return;
+        }
+
+        timeLeft = (gameData.end_time - new Date().getTime()) / 1000;
+        if (timeLeft <= 1) {
+            endRound();
+        }
+
+        if (roundEnded) {
+            timeVisual = "00:00";
+            return;
+        }
+        const leadingZero = (num) => String(num).padStart(2, '0');
+        timeVisual = `${leadingZero(Math.floor(timeLeft / 60))}:${leadingZero(Math.floor(timeLeft) % 60)}`;
+    }, 1000);
 
     const updateImage = () => {
         fetch("http://localhost:3001/api/round_image", {
@@ -102,23 +111,109 @@
         });
     }
 
-    const endGame = () => {
-        if (gameEnded) {
+    const startRound = () => {
+        if (!roundEnded || matchEnded) {
+            return;
+        }
+        
+        if (round == maxRound) {
+            fetch("http://localhost:3001/api/submit_match", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "game_session_id": getCookie("game_session_id"),
+                    "game_mode": getCookie("game_mode")
+                })
+            }).then(response => {
+                if (response.status != 200) {
+                    errorHandle(response.status);
+                }
+                return response.json();
+            }).then(json => {
+                gameData = json.game_data;
+                endMatch();
+            });
             return;
         }
 
-        gameEnded = true;
+        score = 0;
 
+        fetch("http://localhost:3001/api/start_round", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "game_session_id": getCookie("game_session_id"),
+                "game_mode": getCookie("game_mode")
+            })
+        }).then(response => {
+            if (response.status != 200) {
+                errorHandle(response.status);
+            }
+            return response.json();
+        }).then(json => {
+            gameData = json.game_data;
+            roundEnded = false;
+            if (round < maxRound) {
+                round = gameData.round_iterator + 1;
+                updateImage();
+            }
+            updateImage();
+        });
+    }
 
+    const endRound = () => {
+        if (roundEnded) {
+            return;
+        }
+
+        roundEnded = true;
+        submitRound();
+    }
+
+    const endMatch = () => {
+        matchEnded = true;
+        alert("Match finished, score: " +  totalScore);
+    }
+
+    const submitRound = () => {
+        if (roundEnded || matchEnded) {
+            return;
+        }
+
+        fetch("http://localhost:3001/api/submit_round", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "game_session_id": getCookie("game_session_id"),
+                "game_mode": getCookie("game_mode"),
+                "location": {
+                    "x": pinLocation[0],
+                    "y": pinLocation[1]
+                }
+            })
+        }).then(response => {
+            if (response.status != 200) {
+                errorHandle(response.status);
+            }
+            return response.json();
+        }).then(json => {
+            gameData = json.game_data;
+            score = json.round_score;
+            totalScore = gameData.score
+            roundEnded = true;
+
+            alert("Round ended, score: " + score + ". Press continue.");
+        });
     }
 
     const errorHandle = (errorStatus) => {
         alert("Oof! Error: " + errorStatus);
-    }
-
-    const getTimeVisual = (totalTime) => {
-        console.log('test')
-        
     }
 </script>
 <style>
@@ -228,7 +323,7 @@
         <div class="info_container">
             <div class="info_stat">
                 <div class="round label">Round</div>
-                <div id="round_value" class="round value">{round}/5</div>
+                <div id="round_value" class="round value">{round}/{maxRound}</div>
             </div>
             <div class="info_stat">
                 <div class="label">Time</div>
@@ -250,6 +345,7 @@
                 <input id="year_input" type="range" min="1960" max="2025" value="1992">
             </div>
         {/if}
-        <Button text="Submit" />
+        <Button text="Submit" action={submitRound} />
+        <Button text="Continue" action={startRound} />
     </div>
 </div>

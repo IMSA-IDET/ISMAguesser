@@ -54,7 +54,6 @@
                 <option value="standard">Standard</option>
                 <option value="time_travel">Time Travel</option>
                 <option value="weekly">Weekly Challenge</option>
-                <option value="shadow">Shadow</option>
             </select>
         </div>
         <div>
