@@ -8,10 +8,16 @@
     const MAP_LENGTH = $state(256);
 
     let withTimeInput = $state(true);
+    let imageLink = $state("");
+    let timeVisual = $state("00:00");
+
+    let round = $state(1);
+    let timeLeft = 59 * 61 // 59:59
+    let score = $state(0);
+    let gameEnded = false;
 
     let mapPanzoom;
     let mapPin;
-
     let pinLocation = [0, 0];
     let zoomLevel = 1.0;
 
@@ -19,36 +25,7 @@
         mapPin.style.transform = `matrix(${1.0 / zoomLevel}, 0, 0, ${1.0 / zoomLevel}, ${pinLocation[0] - 32}, ${pinLocation[1] - 32}) translate(calc(0% + 0px), calc(-50% + 0px))`;
     }
 
-    onMount(() => {
-        let styleObserver = new MutationObserver((mutations) => {
-            zoomLevel = mapPanzoom.style.transform.substring(7).split(",")[0];
-            updatePinZoom();
-        });
-        styleObserver.observe(mapPanzoom, { attributes : true, attributeFilter : ['style'] });
-
-
-        const response = fetch("http://localhost:3001/api/match_info", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "game_session_id": getCookie("game_session_id"),
-                "game_mode": getCookie("game_mode")
-            })
-        }).then(response => {
-            if (response.status != 200) {
-                alert("Oof! Error: " + response.status);
-            }
-            return response.json();
-        }).then(json => {
-            console.log(json);
-        });
-    });
-
     const touchHandler = (e) => {
-        // console.log(e.layerX, e.layerY)
-        // console.log(e.target.id)
         if (e.target.id == "map_background") {
             pinLocation = [e.layerX, e.layerY];
             updatePinZoom();
@@ -62,6 +39,86 @@
             bounds: true,
             onClick: touchHandler
         });
+    }
+
+    onMount(() => {
+        let styleObserver = new MutationObserver((mutations) => {
+            zoomLevel = mapPanzoom.style.transform.substring(7).split(",")[0];
+            updatePinZoom();
+        });
+        styleObserver.observe(mapPanzoom, { attributes : true, attributeFilter : ['style'] });
+
+        fetch("http://localhost:3001/api/match_info", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "game_session_id": getCookie("game_session_id"),
+                "game_mode": getCookie("game_mode")
+            })
+        }).then(response => {
+            if (response.status != 200) {
+                errorHandle(response.status);
+            }
+            return response.json();
+        }).then(json => {
+            const gameData = json.game_data;
+
+            setInterval(() => {
+                timeLeft = (gameData.end_time - new Date().getTime()) / 1000;
+                if (timeLeft <= 1) {
+                    endGame();
+                }
+
+                if (gameEnded) {
+                    timeVisual = "00:00";
+                }
+                const leadingZero = (num) => String(num).padStart(2, '0');
+                timeVisual = `${leadingZero(Math.floor(timeLeft / 60))}:${leadingZero(Math.floor(timeLeft) % 60)}`;
+            }, 1000);
+
+            updateImage();
+        });
+    });
+
+    const updateImage = () => {
+        fetch("http://localhost:3001/api/round_image", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "game_session_id": getCookie("game_session_id"),
+                "game_mode": getCookie("game_mode")
+            })
+        }).then(response => {
+            if (response.status != 200) {
+                errorHandle(response.status);
+            }
+            return response.blob();
+        }).then(data => {
+            imageLink = URL.createObjectURL(data);
+        });
+    }
+
+    const endGame = () => {
+        if (gameEnded) {
+            return;
+        }
+
+        gameEnded = true;
+
+
+    }
+
+    const errorHandle = (errorStatus) => {
+        alert("Oof! Error: " + errorStatus);
+    }
+
+    const getTimeVisual = (totalTime) => {
+        console.log('test')
+        
     }
 </script>
 <style>
@@ -91,12 +148,14 @@
         height: calc(100% - 64px);
         background-color: aqua;
         padding: 16px;
+        display: flex;
     }
 
     #image {
-        background-color: green;
-        width: 100%;
-        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        background-size: cover;
+        margin: auto;
     }
 
     .controls_container {
@@ -161,21 +220,23 @@
 </style>
 <div class="game_view">
     <div class="image_container">
-        <div><div id="image"></div></div>
+        <div>
+            <img id="image" src="{imageLink}" alt="guess" />
+        </div>
     </div>
     <div class="controls_container">
         <div class="info_container">
             <div class="info_stat">
                 <div class="round label">Round</div>
-                <div id="round_value" class="round value">1/5</div>
+                <div id="round_value" class="round value">{round}/5</div>
             </div>
             <div class="info_stat">
                 <div class="label">Time</div>
-                <div id="time_value" class="value">5:00</div>
+                <div id="time_value" class="value">{timeVisual}</div>
             </div>
             <div class="info_stat">
                 <div class="label">Score</div>
-                <div id="score_value" class="value">4000</div>
+                <div id="score_value" class="value">{score}</div>
             </div>
         </div>
         <div class="map_container">

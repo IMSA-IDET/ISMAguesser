@@ -1,10 +1,16 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from "cors";
+import fs from "fs";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 import { randomID, checkNickInput, getEpochUTC } from "./helper.js";
 import settings from "./config/settings.js";
 import locations from "./config/locations.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const app = express();
 const port = 3001;
 
@@ -78,11 +84,11 @@ app.post("/api/match_info", (req, res) => {
     }));
 });
 
-app.get("/api/round_image", (req, res) => {
+app.post("/api/round_image", (req, res) => {
     res.setHeader("Content-Type", "image/png");
     const json = req.body;
     const sessionId = json.game_session_id;
-    const gameMode = json.game_Mode;
+    const gameMode = json.game_mode;
 
     // Authentication
     if (
@@ -105,14 +111,14 @@ app.get("/api/round_image", (req, res) => {
 
     // Check if image was already selected
     if (activeGames[gameMode][sessionId].history.length == activeGames[gameMode][sessionId].round_iterator + 1) {
-        res.sendFile(`./images/${gameMode}/${activeGames[gameMode][sessionId].history.at(-1)}`);
+        res.sendFile(`${__dirname}/images/${gameMode}/${activeGames[gameMode][sessionId].history.at(-1)}`);
         return;
     }
 
     // Select new random image
     let imageName = "";
     let imageNameFound = false;
-    const images = fs.readdirSync(`./images/${gameMode}/`);
+    const images = fs.readdirSync(`${__dirname}/images/${gameMode}/`);
     while (!imageNameFound) {
         imageName = images[Math.floor(Math.random() *  images.length)];
         if (!activeGames[gameMode][sessionId].history.includes(imageName)) {
@@ -120,7 +126,7 @@ app.get("/api/round_image", (req, res) => {
             activeGames[gameMode][sessionId].history.push(imageName);
         }
     }
-    res.sendFile(`./images/${gameMode}/${imageName}`);
+    res.sendFile(`${__dirname}/images/${gameMode}/${imageName}`);
 });
 
 // Single round submission
@@ -128,7 +134,7 @@ app.post("/api/submit_round", (req, res) => {
     res.setHeader("Content-Type", "application/json");
     const json = res.body;
     const sessionId = json.game_session_id;
-    const gameMode = json.game_Mode;
+    const gameMode = json.game_mode;
 
     // Authentication
     if (
@@ -173,7 +179,7 @@ app.post("/api/submit_match", (req, res) => {
     res.setHeader("Content-Type", "application/json");
     const json = res.body;
     const sessionId = json.game_session_id;
-    const gameMode = json.game_Mode;
+    const gameMode = json.game_mode;
 
     // Authentication
     if (
