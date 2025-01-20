@@ -4,38 +4,36 @@
     import { setCookie } from "../../shared/helper/CookieManager"
 
     let selectGamemode;
-    let isTimedCheckbox;
     let nicknameInput;
 
     let gameMode = "";
-    let isTimed = true;
     let nickname = "";
 
     const startGame = async () => {
         gameMode = selectGamemode.value;
-        isTimed = isTimedCheckbox.value;
         nickname = nicknameInput.value;
 
-        const response = await fetch("/api/create_lobby", {
+        const response = await fetch("http://localhost:3001/api/create_match", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                "game": gameMode,
-                "isTimed": isTimed,
+                "game_mode": gameMode,
                 "nickname": nickname
             })
         });
 
-        const json = await response.json();
-
-        if (json.accepted !== true) {
-            alert("request rejected");
+        if (response.status != 200) {
+            alert("Oof! Error: " + response.status);
         }
+
+        const json = await response.json();
         
         setCookie("game_session_id", json.game_session_id, 1);
         setCookie("game_mode", gameMode, 1);
+
+        window.location.href = "/game";
     }
 </script>
 <style>
@@ -58,9 +56,6 @@
                 <option value="weekly">Weekly Challenge</option>
                 <option value="shadow">Shadow</option>
             </select>
-        </div>
-        <div>
-            <input id="timed_checkbox" type="checkbox" checked bind:this={isTimedCheckbox} />
         </div>
         <div>
             <input id="nickname_input" type="text" minlength="3" maxlength="24" bind:this={nicknameInput} />

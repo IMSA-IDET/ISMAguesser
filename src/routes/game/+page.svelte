@@ -3,6 +3,7 @@
     import { onMount } from 'svelte';
     import Button from "../../shared/components/Button.svelte";
     import panzoom from 'panzoom'
+    import { getCookie } from '../../shared/helper/CookieManager';
 
     const MAP_LENGTH = $state(256);
 
@@ -24,6 +25,25 @@
             updatePinZoom();
         });
         styleObserver.observe(mapPanzoom, { attributes : true, attributeFilter : ['style'] });
+
+
+        const response = fetch("http://localhost:3001/api/match_info", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "game_session_id": getCookie("game_session_id"),
+                "game_mode": getCookie("game_mode")
+            })
+        }).then(response => {
+            if (response.status != 200) {
+                alert("Oof! Error: " + response.status);
+            }
+            return response.json();
+        }).then(json => {
+            console.log(json);
+        });
     });
 
     const touchHandler = (e) => {

@@ -1,7 +1,5 @@
-const fs = require("fs");
-
 export const checkNickInput = (nickname) => {
-
+	return true;
 }
 
 export const randomID = (length) => {
