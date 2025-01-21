@@ -45,7 +45,8 @@ app.post("/api/create_match", (req, res) => {
         "round_iterator": 0,
         "total_rounds": settings[json.game_mode].rounds,
         "history": [],
-        "score": 0
+        "score": 0,
+        "round_started": false
     }
     activeGames[json.game_mode][sessionId] = gameData;
 
@@ -92,8 +93,12 @@ app.post("/api/start_round", (req, res) => {
         return;
     }
 
-    // Reset timer
-    activeGames[gameMode][sessionId].end_time = getEpochUTC() + settings[json.game_mode].time * 1000;
+    if (!activeGames[gameMode][sessionId].round_started) {
+        activeGames[gameMode][sessionId].round_started = true;
+
+        // Reset timer
+        activeGames[gameMode][sessionId].end_time = getEpochUTC() + settings[json.game_mode].time * 1000;
+    }
     
     res.end(JSON.stringify({
         "game_data": activeGames[gameMode][sessionId]
@@ -171,11 +176,9 @@ app.post("/api/submit_round", (req, res) => {
     const distance = Math.sqrt((locationGuess.x - locationAnswer.x) * (locationGuess.x - locationAnswer.x) + (locationGuess.y - locationAnswer.y) * (locationGuess.y - locationAnswer.y));
     const score = Math.floor(settings.general.round_score * Math.max(0, (settings.general.max_distance - distance) / settings.general.max_distance));
 
-    // Adding score to game data
     activeGames[gameMode][sessionId].score += score;
-
-    // Shift iterator
     activeGames[gameMode][sessionId].round_iterator++;
+    activeGames[gameMode][sessionId].round_started = false;
 
     // Sending back round info
     res.end(JSON.stringify({
@@ -203,13 +206,6 @@ app.post("/api/submit_match", (req, res) => {
         res.status(400).send("");
         return;
     }
-
-    // Timeout but allow extra time for submission
-    // if (activeGames[gameMode][sessionId].end_time + settings.general.time_to_submit <= getEpochUTC()) {
-    //     delete activeGames[gameMode][sessionId];
-    //     res.status(403).send("");
-    //     return;
-    // }
 
     // Adding to leaderboard
 

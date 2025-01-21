@@ -19,6 +19,8 @@
     let totalScore = $state(0);
     let roundEnded = true;
     let matchEnded = false;
+    let roundScoreMenu = $state(false);
+    let matchScoreMenu = $state(false);
 
     let mapPanzoom;
     let mapPin;
@@ -112,6 +114,7 @@
     }
 
     const startRound = () => {
+        roundScoreMenu = false;
         if (!roundEnded || matchEnded) {
             return;
         }
@@ -208,7 +211,8 @@
             totalScore = gameData.score
             roundEnded = true;
 
-            alert("Round ended, score: " + score + ". Press continue.");
+            // alert("Round ended, score: " + score + ". Press continue.");
+            roundScoreMenu = true;
         });
     }
 
@@ -312,11 +316,39 @@
         background: url("/icons/pin.png");
         background-size: cover;
     }
+
+    .score_menu_bg {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        opacity: 0.5;
+    }
+
+    .score_menu {
+        position: fixed;
+        width: 500px;
+        height: 70%;
+        background-color: white;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-evenly;
+    }
+
+    #resultMap {
+        width: 400px;
+        height: 300px;
+        background-color: green;
+    }
 </style>
 <div class="game_view">
     <div class="image_container">
         <div>
-            <img id="image" src="{imageLink}" alt="guess" />
+            <img id="image" src="{imageLink}" />
         </div>
     </div>
     <div class="controls_container">
@@ -346,6 +378,36 @@
             </div>
         {/if}
         <Button text="Submit" action={submitRound} />
-        <Button text="Continue" action={startRound} />
     </div>
 </div>
+{#if roundScoreMenu}
+    <div class="score_menu_bg"></div>
+    <div class="score_menu">
+        <div>
+            Result
+        </div>
+        <div>
+            Round score: {score}
+        </div>
+        <div>
+            <canvas id="resultMap" />
+        </div>
+        <div>
+            <Button text="Continue" action={startRound} />
+        </div>
+    </div>
+{/if}
+{#if matchScoreMenu}
+    <div class="score_menu_bg"></div>
+    <div class="score_menu">
+        <div>
+            Match Result
+        </div>
+        <div>
+            Total score: {totalScore}
+        </div>
+        <div>
+            <Button text="Continue" action={startRound} />
+        </div>
+    </div>
+{/if}
