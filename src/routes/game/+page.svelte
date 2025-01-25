@@ -81,13 +81,13 @@
     let mapImage;
     const onCanvasLoad = () => {
         mapImage = new Image();
-        mapImage.src = "/images/map.png";
+        mapImage.src = "/images/main_f1.png";
         mapImage.onload = drawResultMap;
     }
 
     const drawResultMap = () => {
         resultMapCtx = resultMap.getContext("2d");
-        resultMapCtx.drawImage(mapImage, 0, 0, 2048, 2048);
+        resultMapCtx.drawImage(mapImage, 0, 0, mapImage.width, mapImage.height);
 
         
     }
@@ -321,7 +321,7 @@
     #map_background {
         width: 300px;
         height: 300px;
-        background: url("/images/map.png");
+        background: url("/images/main_f1.png");
         background-size: cover;
     }
 
@@ -406,7 +406,7 @@
             Round score: {score}
         </div>
         <div>
-            <canvas id="resultMap" bind:this={resultMap} use:onCanvasLoad width=2048 height=2048 />
+            <canvas id="resultMap" bind:this={resultMap} use:onCanvasLoad width=4354 height=4354 />
         </div>
         <div>
             <Button text="Continue" action={startRound} />
