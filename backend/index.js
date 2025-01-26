@@ -169,12 +169,15 @@ app.post("/api/submit_round", (req, res) => {
         return;
     }
 
-    // Calculating score
+    // Calculating score:
+    // If place is correct, `place_score` points are added
+    // Then, any distance to the correct point is added based on `distance_score`
     const imageName = activeGames[gameMode][sessionId].history.at(-1);
     const locationGuess = json.location;
     const locationAnswer = locations[gameMode][imageName].location;
     const distance = Math.sqrt((locationGuess.x - locationAnswer.x) * (locationGuess.x - locationAnswer.x) + (locationGuess.y - locationAnswer.y) * (locationGuess.y - locationAnswer.y));
-    const score = Math.floor(settings.general.round_score * Math.max(0, (settings.general.max_distance - distance) / settings.general.max_distance));
+    const placeScore = true ? settings.general.place_score : 0;
+    const score = Math.floor(placeScore + settings.general.distance_score * Math.max(0, (settings.general.max_distance - distance) / settings.general.max_distance));
 
     activeGames[gameMode][sessionId].score += score;
     activeGames[gameMode][sessionId].round_iterator++;
@@ -183,7 +186,8 @@ app.post("/api/submit_round", (req, res) => {
     // Sending back round info
     res.end(JSON.stringify({
         "round_score": score,
-        "answer": locationAnswer,
+        "answer_location": locationAnswer,
+        "answer_place": "main",
         "game_data": activeGames[gameMode][sessionId]
     }));
 });

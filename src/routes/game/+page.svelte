@@ -24,6 +24,8 @@
 
     let resultMap;
     let resultMapCtx;
+    let answerLocation = {x: 0, y: 0};
+    let answerPlace = "main";
 
     let mapPanzoom;
     let mapPin;
@@ -89,7 +91,20 @@
         resultMapCtx = resultMap.getContext("2d");
         resultMapCtx.drawImage(mapImage, 0, 0, mapImage.width, mapImage.height);
 
-        
+        const answerCoords = [
+            (answerLocation.x / MAP_LENGTH) * mapImage.width,
+            (answerLocation.y / MAP_LENGTH) * mapImage.height
+        ];
+        const inputCoords = [
+            (pinLocation[0] / MAP_LENGTH) * mapImage.width,
+            (pinLocation[1] / MAP_LENGTH) * mapImage.height
+        ];
+        resultMapCtx.beginPath();
+        resultMapCtx.moveTo(...answerCoords);
+        resultMapCtx.lineTo(...inputCoords);
+        resultMapCtx.lineWidth = 40;
+        resultMapCtx.strokeStyle = "#ff0000";
+        resultMapCtx.stroke();
     }
     
     setInterval(() => {
@@ -99,6 +114,7 @@
 
         timeLeft = (gameData.end_time - new Date().getTime()) / 1000;
         if (timeLeft <= 1) {
+            console.log("1")
             endRound();
         }
 
@@ -190,7 +206,6 @@
             return;
         }
 
-        roundEnded = true;
         submitRound();
     }
 
@@ -204,6 +219,8 @@
             return;
         }
 
+        roundEnded = true;
+
         fetch("http://localhost:3001/api/submit_round", {
             method: "POST",
             headers: {
@@ -215,7 +232,8 @@
                 "location": {
                     "x": pinLocation[0],
                     "y": pinLocation[1]
-                }
+                },
+                "place": ""
             })
         }).then(response => {
             if (response.status != 200) {
@@ -225,7 +243,9 @@
         }).then(json => {
             gameData = json.game_data;
             score = json.round_score;
-            totalScore = gameData.score
+            totalScore = gameData.score;
+            answerLocation = json.answer_location;
+            answerPlace = json.answer_place;
             roundEnded = true;
 
             roundScoreMenu = true;
@@ -271,6 +291,7 @@
         max-height: 100%;
         background-size: cover;
         margin: auto;
+        pointer-events: none;
     }
 
     .controls_container {
@@ -331,6 +352,7 @@
         height: 64px;
         background: url("/icons/pin.png");
         background-size: cover;
+        pointer-events: none;
     }
 
     .score_menu_bg {
@@ -379,7 +401,7 @@
             </div>
             <div class="info_stat">
                 <div class="label">Score</div>
-                <div id="score_value" class="value">{score}</div>
+                <div id="score_value" class="value">{totalScore}</div>
             </div>
         </div>
         <div class="map_container">
