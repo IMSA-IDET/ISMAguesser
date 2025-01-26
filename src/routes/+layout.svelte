@@ -49,8 +49,9 @@
 <nav>
     <div id="left">
         <a id="nav_logo" href="/"></a>
-        <a href="/select">Play</a>
-        <a href="/challenge">Weekly Challenge</a>
+        <!--Hacky solution to page not reloading if only query is changed-->
+        <a href="javascript:window.location.href='/select'">Play</a>
+        <a href="javascript:window.location.href='/select?mode=weekly'">Weekly Challenge</a>
         <a href="/leaderboard">Leaderboard</a>
     </div>
     <div id="right">

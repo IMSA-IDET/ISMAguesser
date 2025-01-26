@@ -211,7 +211,8 @@
 
     const endMatch = () => {
         matchEnded = true;
-        alert("Match finished, score: " +  totalScore);
+        matchScoreMenu = true;
+        // alert("Match finished, score: " +  totalScore);
     }
 
     const submitRound = () => {
@@ -445,7 +446,8 @@
             Total score: {totalScore}
         </div>
         <div>
-            <Button text="Continue" action={startRound} />
+            <Button text="Try Again" action={() => {location.href = "/select"}} />
+            <Button text="Leaderboard" action={() => {location.href = "/leaderboard"}} />
         </div>
     </div>
 {/if}
