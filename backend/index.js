@@ -102,7 +102,7 @@ app.post("/api/start_round", (req, res) => {
 });
 
 app.post("/api/round_image", (req, res) => {
-    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Content-Type", "image/webp");
     const json = req.body;
     const sessionId = json.game_session_id;
     const gameMode = json.game_mode;

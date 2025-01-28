@@ -1,30 +1,29 @@
 export default {
     "standard": {
-        "test.png": {
+        "IMG_6496.webp": {
             "location": {
-                "x": 0,
-                "y": 0
+                "x": 155,
+                "y": 22
             },
         }
     },
     "time_travel": {
-        "test.png": {
+        "IMG_6496": {
             "location": {
-                "x": 0,
-                "y": 0
+                "x": 155,
+                "y": 22
             },
             "date": {
-                "year": 0,
-                "month": 0,
-                "day": 0
+                "year": 2025
             }
-        }
+        },
     },
     "weekly": {
-        "image": "test.png",
-        "location": {
-            "x": 0,
-            "y": 0
-        },
+        "IMG_6496.webp": {
+            "location": {
+                "x": 155,
+                "y": 22
+            },
+        }
     }
 }

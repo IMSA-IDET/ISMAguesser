@@ -24,6 +24,7 @@
     });
 
     const startGame = async () => {
+        console.log("start")
         gameMode = selectGameMode.value;
         nickname = nicknameInput.value;
 
@@ -43,6 +44,7 @@
         }
 
         const json = await response.json();
+        console.log(json)
         
         setCookie("game_session_id", json.game_session_id, 1);
         setCookie("game_mode", gameMode, 1);
@@ -53,17 +55,40 @@
 <style>
     .content {
         display: flex;
+        justify-content: space-evenly;
+        padding: 0px 16px 0px 16px;
+    }
+
+    .content > div {
+        flex: 1;
+        padding: 16px;
     }
 
     .menu_container {
         display: flex;
         flex-direction: column;
+        align-items: center;
         gap: 16px;
+    }
+
+    #nickname_input {
+        outline: none;
     }
 </style>
 <div class="content">
+    <div>
+        <h2>Game Modes</h2>
+        <h3>Standard</h3>
+        <p>5 rounds, 1 minute per round. Guess location of the photo.</p>
+        <h3>Time Travel</h3>
+        <p>5 rounds, 1 minute per round. Guess location and year the photo was taken.</p>
+        <h3>Weekly Challenge</h3>
+        <p>1 round, 10 minutes. New photo every week.</p>
+    </div>
     <div class="menu_container">
+        <h1 class="heading2">Start a round</h1>
         <div>
+            <h3>Game mode: </h3>
             <select id="gamemode_input" bind:this={selectGameMode}>
                 <option value="standard">Standard</option>
                 <option value="time_travel">Time Travel</option>
@@ -71,13 +96,11 @@
             </select>
         </div>
         <div>
+            <h3>Nickname: </h3>
             <input id="nickname_input" type="text" minlength="3" maxlength="24" bind:this={nicknameInput} />
         </div>
         <div>
-            <Button text="Start" action={startGame}></Button>
+            <Button text="START" action={startGame}></Button>
         </div>
-    </div>
-    <div>
-
     </div>
 </div>
