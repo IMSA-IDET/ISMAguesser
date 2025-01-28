@@ -7,12 +7,12 @@
 
     const MAP_LENGTH = $state(256);
 
-    let withTimeInput = $state(false);
     let imageLink = $state("");
     let timeVisual = $state("00:00");
 
     let gameData = undefined;
-    let round = $state(1);
+    let gameMode = $state("standard");
+    let round = $state(0);
     let maxRound = $state(1);
     let timeLeft = 59 * 61 // 59:59
     let score = $state(0);
@@ -21,6 +21,10 @@
     let matchEnded = false;
     let roundScoreMenu = $state(false);
     let matchScoreMenu = $state(false);
+
+    let yearInput;
+    let yearInputValue = $state(1992);
+    let answerYear = 0;
 
     let resultMap;
     let resultMapCtx;
@@ -53,6 +57,8 @@
     }
 
     onMount(() => {
+        gameMode = getCookie("game_mode");
+
         let styleObserver = new MutationObserver((mutations) => {
             zoomLevel = mapPanzoom.style.transform.substring(7).split(",")[0];
             updatePinZoom();
@@ -66,7 +72,7 @@
             },
             body: JSON.stringify({
                 "game_session_id": getCookie("game_session_id"),
-                "game_mode": getCookie("game_mode")
+                "game_mode": gameMode
             })
         }).then(response => {
             if (response.status != 200) {
@@ -134,7 +140,7 @@
             },
             body: JSON.stringify({
                 "game_session_id": getCookie("game_session_id"),
-                "game_mode": getCookie("game_mode")
+                "game_mode": gameMode
             })
         }).then(response => {
             if (response.status != 200) {
@@ -152,6 +158,7 @@
             return;
         }
         
+        console.log("round", round, maxRound)
         if (round == maxRound) {
             fetch("http://localhost:3001/api/submit_match", {
                 method: "POST",
@@ -160,7 +167,7 @@
                 },
                 body: JSON.stringify({
                     "game_session_id": getCookie("game_session_id"),
-                    "game_mode": getCookie("game_mode")
+                    "game_mode": gameMode
                 })
             }).then(response => {
                 if (response.status != 200) {
@@ -183,7 +190,7 @@
             },
             body: JSON.stringify({
                 "game_session_id": getCookie("game_session_id"),
-                "game_mode": getCookie("game_mode")
+                "game_mode": gameMode
             })
         }).then(response => {
             if (response.status != 200) {
@@ -212,7 +219,6 @@
     const endMatch = () => {
         matchEnded = true;
         matchScoreMenu = true;
-        // alert("Match finished, score: " +  totalScore);
     }
 
     const submitRound = () => {
@@ -229,12 +235,13 @@
             },
             body: JSON.stringify({
                 "game_session_id": getCookie("game_session_id"),
-                "game_mode": getCookie("game_mode"),
+                "game_mode": gameMode,
                 "location": {
                     "x": pinLocation[0],
                     "y": pinLocation[1]
                 },
-                "place": ""
+                "place": "",
+                "year": yearInputValue
             })
         }).then(response => {
             if (response.status != 200) {
@@ -247,6 +254,7 @@
             totalScore = gameData.score;
             answerLocation = json.answer_location;
             answerPlace = json.answer_place;
+            answerYear = json.answer_year
             roundEnded = true;
 
             roundScoreMenu = true;
@@ -411,9 +419,10 @@
                 <div id="map_background" style="width: {MAP_LENGTH}px; height: {MAP_LENGTH}px"></div>
             </div>
         </div>
-        {#if withTimeInput}
+        {#if gameMode == "time_travel"}
             <div class="year_container">
-                <input id="year_input" type="range" min="1960" max="2025" value="1992">
+                <input id="year_input" type="range" bind:this={yearInput} bind:value={yearInputValue} min="1960" max="2025">
+                <div>{yearInputValue}</div>
             </div>
         {/if}
         <Button text="Submit" action={submitRound} />
@@ -431,6 +440,12 @@
         <div>
             <canvas id="resultMap" bind:this={resultMap} use:onCanvasLoad width=4354 height=4354 />
         </div>
+        {#if gameMode == "time_travel"}
+            <div>
+                <div>Guessed year: {yearInputValue}</div>
+                <div>Actual year: {answerYear}</div>
+            </div>
+        {/if}
         <div>
             <Button text="Continue" action={startRound} />
         </div>

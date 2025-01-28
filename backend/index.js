@@ -12,7 +12,7 @@ import locations from "./config/locations.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(bodyParser.json());
@@ -21,13 +21,9 @@ app.use(cors());
 // Game data
 let activeGames = {
     "standard": {},
-    "time_travel": {}
-}
-
-// Separate data for weekly challenge games
-let activeWeeklyGames = {
-
-}
+    "time_travel": {},
+    "weekly": {}
+};
 
 app.post("/api/create_match", (req, res) => {
     res.setHeader("Content-Type", "application/json");
@@ -177,7 +173,14 @@ app.post("/api/submit_round", (req, res) => {
     const locationAnswer = locations[gameMode][imageName].location;
     const distance = Math.sqrt((locationGuess.x - locationAnswer.x) * (locationGuess.x - locationAnswer.x) + (locationGuess.y - locationAnswer.y) * (locationGuess.y - locationAnswer.y));
     const placeScore = true ? settings.general.place_score : 0;
-    const score = Math.floor(placeScore + settings.general.distance_score * Math.max(0, (settings.general.max_distance - distance) / settings.general.max_distance));
+    const distanceScore = settings.general.distance_score * Math.max(0, (settings.general.max_distance - distance) / settings.general.max_distance);
+    let yearAnswer = 0;
+    let timeScore = 0;
+    if (gameMode == "time_travel") {
+        yearAnswer = locations[gameMode][imageName].date.year;
+        timeScore = Math.max(1.0 - (Math.abs(json.year - yearAnswer) / settings.general.max_time_radius), 0) * settings.general.time_score;
+    }
+    const score = Math.floor(placeScore + distanceScore + timeScore);
 
     activeGames[gameMode][sessionId].score += score;
     activeGames[gameMode][sessionId].round_iterator++;
@@ -188,6 +191,7 @@ app.post("/api/submit_round", (req, res) => {
         "round_score": score,
         "answer_location": locationAnswer,
         "answer_place": "main",
+        "answer_year": yearAnswer,
         "game_data": activeGames[gameMode][sessionId]
     }));
 });
